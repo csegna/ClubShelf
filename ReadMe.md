@@ -44,14 +44,9 @@ or join its waitlist. Use sample student IDs during development and demos.
 
 ## Run the model and queue checks
 
-After merging the team model files, compile and run the model driver from the
-source directory. It exercises borrowing, waitlist positions, FIFO assignment
-after a return, and rejection of a repeat return without launching the console.
-
-```sh
-javac -d build QueueInterface.java LinkedQueue.java EmptyQueueException.java Club.java ClubShelf.java Equipment.java Outcome.java ActionResult.java ItemStatus.java tests/ClubShelfModelDriver.java
-java -cp build ClubShelfModelDriver
-```
+For Deliverable 3, the team needs a test or driver that exercises borrowing,
+waitlist positions, and FIFO assignment after a return without launching the
+console. Add the run instructions here once the team picks its model check.
 
 In Eclipse, put `tests/LinkedQueueTest.java` in the project's test source
 folder, add the JUnit 4.13.2 library to the build path, and select
@@ -154,8 +149,7 @@ and test file in the merged prototype with its actual contributors and work.
 | `LinkedQueue.Node<T>` | Alexander Kyle | GenAI-assisted draft |
 | `EmptyQueueException` | Alexander Kyle | GenAI-assisted draft |
 | `tests/LinkedQueueTest.java` | Alexander Kyle | GenAI-assisted JUnit draft and test run |
-| `tests/ClubShelfModelDriver.java` | Alexander Kyle | GenAI-assisted draft based on the agreed model signatures |
 
 GenAI note. Alexander Kyle used OpenAI ChatGPT (Codex) to analyze the project
-specification and scope and to draft the queue, queue tests, model driver,
-README, and text-file catalog design.
+specification and scope and to draft the queue, queue tests, README, and
+text-file catalog design.
