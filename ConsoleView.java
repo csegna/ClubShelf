@@ -60,17 +60,16 @@ public class ConsoleView {
 
 
     /**
-     * Prints the numbered list of actions a student can pick after choosing
-     * a club.
+     * Prints the numbered list of actions a student can pick.
      */
     public void showMenu() {
         output.println();
         output.println("What would you like to do?");
-        output.println("  1. Borrow an item");
-        output.println("  2. Join a waitlist");
-        output.println("  3. Return an item");
-        output.println("  4. View a waitlist");
-        output.println("  5. Pick a different club");
+        output.println("  1. View a catalog");
+        output.println("  2. Borrow an item");
+        output.println("  3. Join a waitlist");
+        output.println("  4. Return an item");
+        output.println("  5. View a waitlist");
         output.println("  6. Quit");
     }
 
@@ -188,7 +187,7 @@ public class ConsoleView {
         }
         else if (outcome == Outcome.INVALID_STUDENT_ID) {
             output.println("That student ID is not valid. "
-                + "Type your ID using digits only, with no spaces.");
+                + "Enter exactly 9 digits, with no spaces.");
         }
         else if (outcome == Outcome.ITEM_UNAVAILABLE) {
             output.println("Another student has this item right now. "
