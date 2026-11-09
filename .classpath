@@ -3,4 +3,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="output" path=""/>
+	<classpathentry kind="lib" path="C:/Users/alexa/eclipse/plugins/org.junit_4.13.2.v20240929-1000.jar"/>
+	<classpathentry kind="lib" path="C:/Users/alexa/eclipse/plugins/org.hamcrest_2.2.0.jar"/>
 </classpath>
