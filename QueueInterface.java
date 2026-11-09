@@ -5,33 +5,50 @@
  * @param <T> the type of entry stored in the queue
  */
 public interface QueueInterface<T> {
-
     /**
-     * Adds an entry to the back of the queue.
+     * Adds a non-null entry to the back of the queue.
      *
-     * @param entry the entry to be added
+     * @param entry the entry to add
+     * @throws IllegalArgumentException if entry is null
      */
     void enqueue(T entry);
 
     /**
-     * Removes and returns the entry at the front of the queue.
+     * Removes and returns the front entry.
      *
-     * @return the entry at the front of the queue
+     * @return the removed entry
+     * @throws EmptyQueueException if the queue is empty
      */
     T dequeue();
 
     /**
-     * Returns the entry at the front of the queue without removing it.
+     * Reads the front entry without removing it.
      *
-     * @return the entry at the front of the queue
+     * @return the front entry
+     * @throws EmptyQueueException if the queue is empty
      */
     T peek();
 
     /**
-     * Checks if the queue is empty.
-     *
-     * @return true if the queue is empty, false otherwise
+     * @return whether the queue contains no entries
      */
     boolean isEmpty();
-    
+
+    /**
+     * @return the number of entries in the queue
+     */
+    int size();
+
+    /**
+     * Searches the queue using equals.
+     *
+     * @param entry the value to look for
+     * @return whether a matching value is present
+     */
+    boolean contains(T entry);
+
+    /**
+     * @return a new array of entries in front-to-back order
+     */
+    Object[] toArray();
 }
