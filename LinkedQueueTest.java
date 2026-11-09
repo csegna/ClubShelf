@@ -1,8 +1,8 @@
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -60,14 +60,14 @@ public class LinkedQueueTest {
         assertEquals("second", queue.dequeue());
     }
 
-    @Test
+    @Test(expected = EmptyQueueException.class)
     public void dequeueOnEmptyQueueThrows() {
-        assertThrows(EmptyQueueException.class, queue::dequeue);
+        queue.dequeue();
     }
 
-    @Test
+    @Test(expected = EmptyQueueException.class)
     public void peekOnEmptyQueueThrows() {
-        assertThrows(EmptyQueueException.class, queue::peek);
+        queue.peek();
     }
 
     @Test
@@ -99,7 +99,12 @@ public class LinkedQueueTest {
     public void enqueueRejectsNullAndKeepsTheQueueIntact() {
         queue.enqueue("first");
 
-        assertThrows(IllegalArgumentException.class, () -> queue.enqueue(null));
+        try {
+            queue.enqueue(null);
+            fail("Expected enqueue(null) to throw IllegalArgumentException.");
+        } catch (IllegalArgumentException expected) {
+            // Continue to check that the rejected entry did not change the queue.
+        }
         assertEquals(1, queue.size());
         assertEquals("first", queue.dequeue());
         assertTrue(queue.isEmpty());
