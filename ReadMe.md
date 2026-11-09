@@ -1,155 +1,137 @@
 # ClubShelf
 
-ClubShelf is a Java console app for campus equipment lending. Students select
-Photography Club, Outdoor Club, or Gamers Group, then choose one of the club's
-three items. Each item has one copy and its own first-in, first-out (FIFO)
-waitlist. When a borrower returns an item, the model assigns it to the first
-waiting student or makes it available if the waitlist is empty.
+CS 2114 Project 3, Deliverable 3 — First Prototype
 
-## Proposed team split
+ClubShelf is a Java console app for borrowing equipment from Photography Club,
+Outdoor Club, and Gamers Group. Each club starts with three items and one copy
+of each item. If an item is checked out, students can join its waitlist. When
+the borrower returns it, ClubShelf assigns it to the first student in line or
+makes it available if nobody is waiting.
 
-| Owner | Types | Count |
-| --- | --- | --- |
-| Alexander Kyle | `QueueInterface<T>`, `LinkedQueue<T>`, `EmptyQueueException`, and the private `LinkedQueue.Node<T>` | 4 |
-| Teammate who claimed the app and model files | `ClubShelfApp`, `ClubShelfController`, `ClubShelf`, `Equipment`, and `Club` (assumed fifth) | 5 |
-| Other teammate | `ConsoleView`, `Outcome`, `ActionResult`, and `ItemStatus` | 4 |
+## Run the app
 
-Confirm `Club` as the fifth claimed type before merging. This proposed split
-updates the original specification's work assignments. The 13 types include an
-interface, an enum, and a private node. Alexander's four types live in three
-Java files because `Node<T>` is declared inside `LinkedQueue.java`.
+In Eclipse, open the ClubShelf project, right-click `ClubShelfApp.java`, and
+choose **Run As → Java Application**. Enter your choices in the Console tab.
 
-## Build and run
-
-Put the three queue files next to the other source files. They currently use
-Java's default package. If the team project has a named package, add the
-project's package declaration and use its corresponding source folder.
-
-To compile the queue independently from the directory containing the files:
+From the repository folder with a JDK installed, you can also run:
 
 ```sh
-javac QueueInterface.java LinkedQueue.java EmptyQueueException.java
+javac -d bin ClubShelfApp.java
+java -cp bin ClubShelfApp
 ```
 
-Once the team's source files are together in the default package, run these
-commands from that same directory with a JDK installed:
+To demo a return with a waitlist, use the same club and item for each action:
+
+1. Choose **2** to borrow with ID `001234567`.
+2. Choose **3** to join the waitlist with `002234567`, then again with
+   `003234567`. They should be in positions 1 and 2.
+3. Choose **4** to return as `001234567`. The app should assign the item to
+   `002234567` and show `003234567` still waiting.
+4. Choose **6** to quit.
+
+## Run the model on its own
+
+Build the app as shown above. With JDK 11 or later, save this short driver as
+`ClubShelfModelDemo.java` temporarily in the repository folder:
+
+```java
+class ClubShelfModelDemo {
+    public static void main(String[] args) {
+        ClubShelf shelf = new ClubShelf();
+        System.out.println(shelf.borrowItem(1, 1, "001234567").getOutcome());
+        System.out.println(shelf.joinWaitlist(1, 1, "002234567").getQueuePosition());
+        System.out.println(shelf.returnItem(1, 1, "001234567").getNextBorrowerId());
+    }
+}
+```
 
 ```sh
-javac *.java
-java ClubShelfApp
+java -cp bin ClubShelfModelDemo.java
 ```
 
-Follow the numbered menus to pick a club and item, borrow or return it, or view
-or join its waitlist. Use sample student IDs during development and demos.
+The driver prints `SUCCESS`, queue position `1`, and the new borrower ID
+`002234567`. It calls the model directly. Keep this temporary demo outside
+the commit.
 
-## Run the model and queue checks
+## Reflection
 
-For Deliverable 3, the team needs a test or driver that exercises borrowing,
-waitlist positions, and FIFO assignment after a return without launching the
-console. Add the run instructions here once the team picks its model check.
+**What changed from the specification.** We kept the 13 planned types and
+redistributed the implementation. Corbin took the five app, controller, and
+model types. Angelo took the view and result types, and Alexander took the
+four queue types. The specification had conflicting rules for ID length. The
+prototype follows its data and test sections and requires exactly nine digits.
+It keeps IDs as strings so leading zeros are preserved. During integration,
+the console menu labels were aligned with the controller's option numbers so
+each displayed choice triggers the correct action.
 
-In Eclipse, put `tests/LinkedQueueTest.java` in the project's test source
-folder, add the JUnit 4.13.2 library to the build path, and select
-**Run As → JUnit Test** on the file. If the team uses a named package, match
-the package declaration in both test files to the model.
+**Model and view.** `ClubShelf` handles borrowing rules, ID validation, and
+waitlist updates. `ClubShelfController` checks menu choices and calls the
+model. `ConsoleView` reads lines and displays results. Calling
+`ClubShelf` directly exercises the lending rules without a scanner, a console
+view, or a controller.
 
-## How the queue connects to the app
+**What we figured out.** The queue uses `contains` to look for duplicate IDs
+and `toArray` to show the waitlist in order without removing entries.
+`ActionResult` tells the view whether the request succeeded and carries the
+queue position or next borrower's ID when relevant. When the correct borrower
+returns an item, the model takes the first ID from the queue and makes that
+student the borrower. The app shows this handoff in the console.
 
-Each `Equipment` instance owns one `QueueInterface<String>` backed by a
-`LinkedQueue<String>`. The queue stores entries in the order they arrive.
-`ClubShelf` applies the lending rules, including rejecting duplicate requests,
-requests from the current borrower, and returns from the wrong student.
-`ClubShelfController` handles menu input and passes model results and
-`ItemStatus` snapshots to `ConsoleView`.
+**What is still open.** The catalog is built into the program. Loans and
+waitlists reset on exit. The prototype has no claim deadlines, loan history,
+or support for multiple copies. We still need a team pass through the full
+set of bad-input scenarios.
 
-- `enqueue` appends at the back and `dequeue` removes from the front. Each
-  operation is O(1), as are `peek`, `size`, and `isEmpty`.
-- `contains` compares entries with `equals` and `toArray` copies entries in
-  FIFO order without removing them. Both are O(n). The queue permits repeated
-  entries, so the model checks `contains(studentId)` before adding a request.
-- After a successful join, `size()` is the student's one-based queue position.
-  On a valid return, the model checks `isEmpty()` and dequeues once when a
-  waiting student exists. The dequeued ID becomes the new borrower.
-- For the `ItemStatus` snapshot, copy the queue's `Object[]` into a
-  `String[]`, for example with
-  `Arrays.copyOf(entries, entries.length, String[].class)`. A direct cast of
-  the `Object[]` to `String[]` throws at runtime.
+## Next Steps
 
-The specification's method signatures accept any nonempty digits-only ID,
-while its state description and edge-case tests call for exactly nine digits.
-Use the method signatures as the working interpretation and confirm it as a
-team before finalizing the model and its tests. Keep IDs as strings to preserve
-leading zeros. The queue has no student ID rules.
+The owners below are proposed for the next implementation.
 
-## Integration checks
+1. **Finish MVP verification.** Corbin will check model rules and menu
+   recovery for invalid choices, bad IDs, and repeat returns. Alexander will
+   check duplicate joins, FIFO handoffs, and that rejected actions leave the
+   queue intact. Angelo will check the messages for each outcome and confirm
+   they describe the model's rules.
+2. **Add Import Club Catalog for Deliverable 4.** The proposed feature is a
+   menu action that reads a text file and adds new clubs to the running
+   catalog while preserving existing loans and waitlists. A line such as
+   `Robotics Club | Multimeter | Soldering Kit` defines a club and its items.
+   Alexander will own parsing and file validation. Corbin will own the model
+   and controller changes. Angelo will own the menu label, prompts, and
+   import messages.
+3. **Verify the import.** Alexander will check valid rows, blank fields,
+   trailing separators, missing files, and duplicate names. Corbin will check
+   that imported clubs are selectable and a rejected import leaves the
+   existing catalog, loans, and waitlists intact. Angelo will check that the
+   new menu choice reports success and failure clearly.
 
-1. Open the app and verify that each of the three clubs has three available
-   items. Borrow one with ID `001234567`.
-2. Add `002234567` and `003234567` to the same item's waitlist. Check that
-   positions are 1 and 2, and that viewing the list twice leaves the order
-   intact.
-3. Attempt a duplicate join, a join by the current borrower, and a return by the
-   wrong student. The borrower and waitlist should stay the same.
-4. Return the item as `001234567`. Check that `002234567` becomes the borrower
-   and only `003234567` remains waiting. Repeat the old borrower's return and
-   verify the state is unchanged. Return it as each new borrower in order and
-   verify that the item ends up available.
-5. Try blank, nonnumeric, and out-of-range menu choices, malformed IDs, and end
-   of input. Check that the app recovers from invalid input and exits cleanly
-   when input ends.
+We expect `ClubShelf` to gain an import operation and update the catalog
+lookups, `Club` to accept catalogs with different item counts,
+`ClubShelfController.run()` to route the new choice, and
+`ConsoleView.showMenu()` to display it. The queue types, `Equipment`,
+and the existing borrowing and return methods should be reusable as they are.
 
-For the queue in isolation, check FIFO order, equality between distinct String
-objects with the same text, null rejection, `peek` and `dequeue` on empty,
-enqueue after removing the last entry, and independence of the array returned by
-`toArray()`.
-
-## Stretch goal for a text file catalog
-
-After the core app passes integration checks, accept an optional startup path
-to a UTF-8 text file such as `catalog.txt`. Each row defines one club. Split
-the row on `|` into tokens. The first token is the club name and each later
-token is an item name. Reserve `|` as the separator and use `#` at the start
-of a line for comments.
-
-```text
-# Club | Item | Item | ...
-Photography Club | Camera | Tripod | Lens Kit
-Outdoor Club | Tent | Sleeping Bag | Camp Stove
-Gamers Group | Controller | Board Game | Console
-Robotics Club | Multimeter | Soldering Kit
-```
-
-1. Read the file at startup and skip blank lines and lines beginning with `#`
-   after trimming.
-2. Split each remaining line with `line.split("\\|", -1)` and trim each token.
-   Keeping empty tokens lets the loader catch missing names, including a
-   trailing separator. Require a club name, at least one item, and at least
-   one valid club in the file. Reject duplicate club names and duplicate item
-   names within a club.
-3. Validate the whole catalog before constructing the model. With no file
-   specified, use the built-in catalog. If the supplied file is missing or
-   invalid, show a startup message with the path and the line number when
-   available, then load the built-in catalog.
-4. Update `Club` to accept variable catalog lengths. Have the model and
-   controller check selections against the actual number of clubs and items.
-   Test with an extra club, a club with two items, and an invalid file.
-
-Each loaded item still owns its own queue. Catalog loading defines what can be
-borrowed. Saving current loans and waitlists across runs is a separate feature.
+Catalog import is the stretch goal planned for Deliverable 4. Saving loans and
+waitlists, claim deadlines, loan history, and multiple copies are deferred.
 
 ## Attribution
 
-These rows cover Alexander Kyle's portion. Add a row for every other class
-and test file in the merged prototype with its actual contributors and work.
-
-| Class or test file | Contributor | Work |
+| Type | Contributor | Work |
 | --- | --- | --- |
-| `QueueInterface<T>` | Alexander Kyle | GenAI-assisted draft |
-| `LinkedQueue<T>` | Alexander Kyle | GenAI-assisted draft and queue verification |
-| `LinkedQueue.Node<T>` | Alexander Kyle | GenAI-assisted draft |
-| `EmptyQueueException` | Alexander Kyle | GenAI-assisted draft |
-| `tests/LinkedQueueTest.java` | Alexander Kyle | GenAI-assisted JUnit draft and test run |
+| `ClubShelfApp` | Corbin Segna | Connected the model, view, and controller |
+| `ClubShelfController` | Corbin Segna | Implemented the menu loop and input handling |
+| `ClubShelf` | Corbin Segna | Implemented catalog access and lending rules |
+| `Club` | Corbin Segna | Implemented club records and equipment lookup |
+| `Equipment` | Corbin Segna | Implemented item records and waitlists |
+| `ConsoleView` | Angelo Pinillos-Sternberg | Implemented console input, menus, and messages |
+| `Outcome` | Angelo Pinillos-Sternberg | Defined the lending outcomes |
+| `ActionResult` | Angelo Pinillos-Sternberg | Implemented the result returned by lending actions |
+| `ItemStatus` | Angelo Pinillos-Sternberg | Implemented the read-only item snapshot |
+| `QueueInterface<T>` | Alexander Kyle | Defined the queue operations |
+| `LinkedQueue<T>` | Alexander Kyle | Implemented and checked FIFO queue behavior |
+| `LinkedQueue.Node<T>` | Alexander Kyle | Implemented the private node inside `LinkedQueue.java` |
+| `EmptyQueueException` | Alexander Kyle | Implemented the exception for empty queue operations |
 
-GenAI note. Alexander Kyle used OpenAI ChatGPT (Codex) to analyze the project
-specification and scope and to draft the queue, queue tests, README, and
-text-file catalog design.
+**GenAI note.** Corbin Segna, Angelo Pinillos-Sternberg, and Alexander Kyle
+each used generative AI assistance on their assigned work. Alexander used
+OpenAI ChatGPT (Codex) to review the scope and specification, draft the queue
+code and README, and think through which classes a catalog import would affect.
