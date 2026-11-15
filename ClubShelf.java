@@ -1,5 +1,7 @@
+import java.io.IOException;
+
 /**
- * Holds the three clubs and handles borrowing, waitlists, and returns.
+ * Holds clubs and handles borrowing, waitlists, and returns.
  * Menu numbers start at 1. Invalid numbers throw IllegalArgumentException.
  * Other rejected requests return an ActionResult and leave the items as they were.
  *
@@ -42,6 +44,59 @@ public class ClubShelf
                 new Equipment("VR Headset") }) };
     }
 
+
+    /**
+     * Adds clubs and equipment from a text file. Existing items are skipped.
+     *
+     * @param fileName the catalog file to read
+     * @return the number of new equipment items added
+     * @throws IOException if the file cannot be read
+     * @throws IllegalArgumentException if the file name or contents are invalid
+     */
+    public int importCatalog(String fileName) throws IOException
+    {
+        // Validate the complete file before changing any existing records.
+        Club[] imported = CatalogLoader.load(fileName);
+        int addedItems = 0;
+        for (Club incoming : imported)
+        {
+            Club existing = findClubByName(incoming.getName());
+            if (existing == null)
+            {
+                Club[] expanded = new Club[clubs.length + 1];
+                System.arraycopy(clubs, 0, expanded, 0, clubs.length);
+                expanded[clubs.length] = incoming;
+                clubs = expanded;
+                addedItems += incoming.getItemCount();
+            }
+            else
+            {
+                for (int i = 1; i <= incoming.getItemCount(); i++)
+                {
+                    Equipment item = incoming.getItem(i);
+                    if (!existing.hasItem(item.getName()))
+                    {
+                        existing.addItem(item);
+                        addedItems++;
+                    }
+                }
+            }
+        }
+        return addedItems;
+    }
+
+
+    private Club findClubByName(String name)
+    {
+        for (Club club : clubs)
+        {
+            if (club.getName().equalsIgnoreCase(name))
+            {
+                return club;
+            }
+        }
+        return null;
+    }
 
     /** 
      * @return a new array of club names in menu order 

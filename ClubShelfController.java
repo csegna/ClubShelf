@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 /**
  * Runs the menu, checks menu choices, and shows results from ClubShelf.
  *
@@ -13,6 +15,7 @@ public class ClubShelfController
     private static final int RETURN = 4;
     private static final int VIEW_WAITLIST = 5;
     private static final int EXIT = 6;
+    private static final int IMPORT_CATALOG = 7;
 
     private ClubShelf model;
     private ConsoleView view;
@@ -41,7 +44,7 @@ public class ClubShelfController
         while (running) 
         {
             view.showMenu();
-            Integer choice = readNumber("Choose an option: ", 1, EXIT);
+            Integer choice = readNumber("Choose an option: ", 1, IMPORT_CATALOG);
             if (choice == null || choice == EXIT) 
             {
                 running = false;
@@ -61,6 +64,10 @@ public class ClubShelfController
      */
     private boolean handleChoice(int choice) 
     {
+        if (choice == IMPORT_CATALOG)
+        {
+            return handleImport();
+        }
         int[] selection = readSelection(choice != VIEW_CATALOG);
         if (selection == null) 
         {
@@ -94,6 +101,38 @@ public class ClubShelfController
         }
     }
 
+
+    /** Reads a catalog file without changing existing loans or waitlists. */
+    private boolean handleImport()
+    {
+        String fileName = view.readLine("Catalog file (Enter for clubs.txt): ");
+        if (fileName == null)
+        {
+            return false;
+        }
+        fileName = fileName.trim();
+        if (fileName.isEmpty())
+        {
+            fileName = "clubs.txt";
+        }
+        try
+        {
+            int previousClubs = model.getClubNames().length;
+            int addedItems = model.importCatalog(fileName);
+            int addedClubs = model.getClubNames().length - previousClubs;
+            view.showMessage("Import complete. Added " + addedClubs
+                + " club(s) and " + addedItems + " equipment item(s).");
+        }
+        catch (IOException e)
+        {
+            view.showMessage("Could not read catalog: " + e.getMessage());
+        }
+        catch (IllegalArgumentException e)
+        {
+            view.showMessage("Import failed: " + e.getMessage());
+        }
+        return true;
+    }
 
     private boolean handleBorrow(int club, int item) 
     {

@@ -71,6 +71,7 @@ public class ConsoleView {
         output.println("  4. Return an item");
         output.println("  5. View a waitlist");
         output.println("  6. Quit");
+        output.println("  7. Import club catalog");
     }
 
 

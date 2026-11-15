@@ -1,5 +1,5 @@
 /**
- * A campus club with the same three items in its catalog.
+ * A campus club and its equipment catalog.
  *
  * @author Corbin Segna
  * @version 2026.11.09
@@ -8,7 +8,7 @@ public class Club
 {
 
     /** 
-     * How many items each club needs. 
+     * How many items each built-in club starts with. 
      **/
     public static final int ITEM_COUNT = 3;
 
@@ -19,9 +19,9 @@ public class Club
      * Creates a club and copies the equipment array.
      *
      * @param name the club's name
-     * @param equipment the club's three items
+     * @param equipment the club's items
      * @throws IllegalArgumentException if the name is null or blank,
-     *         the array is null or the wrong size, or an item is null
+     *         the array is null or empty, or an item is null
      */
     public Club(String name, Equipment[] equipment) 
     {
@@ -29,10 +29,10 @@ public class Club
         {
             throw new IllegalArgumentException("Club name cannot be blank");
         }
-        if (equipment == null || equipment.length != ITEM_COUNT) 
+        if (equipment == null || equipment.length == 0) 
         {
             throw new IllegalArgumentException(
-                "A club must have exactly " + ITEM_COUNT + " items");
+                "A club must have at least one item");
         }
         for (Equipment e : equipment) 
         {
@@ -60,6 +60,32 @@ public class Club
     public int getItemCount() 
     {
         return items.length;
+    }
+
+    /** Checks whether an imported item is already in this club. */
+    boolean hasItem(String itemName)
+    {
+        for (Equipment item : items)
+        {
+            if (item.getName().equalsIgnoreCase(itemName))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Adds equipment while keeping existing borrowers and queues intact. */
+    void addItem(Equipment item)
+    {
+        if (item == null)
+        {
+            throw new IllegalArgumentException("Equipment items cannot be null");
+        }
+        Equipment[] expanded = new Equipment[items.length + 1];
+        System.arraycopy(items, 0, expanded, 0, items.length);
+        expanded[items.length] = item;
+        items = expanded;
     }
 
     /**
