@@ -43,7 +43,7 @@ public class ClubShelfControllerTest
         String output = runMenu(new ClubShelf(), "wrong\n99\n2\n");
 
         assertTrue(output.contains("Please enter a number"));
-        assertTrue(output.contains("Please enter a choice from 1 to 7"));
+        assertTrue(output.contains("Please enter a choice from 1 to 8"));
         assertTrue(output.contains("Goodbye!"));
     }
 
@@ -98,13 +98,13 @@ public class ClubShelfControllerTest
     {
         ClubShelf shelf = new ClubShelf();
         String input = String.join("\n", "", "wrong", "2147483648",
-            "0", "8", "2", "0", "4", "1", "0", "4", "1",
+            "0", "9", "2", "0", "4", "1", "0", "4", "1",
             "bad", "001234567", "6");
 
         String output = runMenu(shelf, input);
 
         assertTrue(output.contains("Please enter a number"));
-        assertTrue(output.contains("Please enter a choice from 1 to 7"));
+        assertTrue(output.contains("Please enter a choice from 1 to 8"));
         assertTrue(output.contains("Please enter a choice from 1 to 3"));
         assertTrue(output.contains("That student ID is not valid"));
         assertEquals("001234567", shelf.getItemStatus(1, 1).getBorrowerId());

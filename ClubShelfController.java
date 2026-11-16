@@ -4,7 +4,7 @@ import java.io.IOException;
  * Runs the menu, checks menu choices, and shows results from ClubShelf.
  *
  * @author Corbin Segna
- * @version 2026.11.09
+ * @version 2026.11.16
  */
 public class ClubShelfController 
 {
@@ -16,6 +16,7 @@ public class ClubShelfController
     private static final int VIEW_WAITLIST = 5;
     private static final int EXIT = 6;
     private static final int IMPORT_CATALOG = 7;
+    private static final int VIEW_HISTORY = 8;
 
     private ClubShelf model;
     private ConsoleView view;
@@ -44,7 +45,7 @@ public class ClubShelfController
         while (running) 
         {
             view.showMenu();
-            Integer choice = readNumber("Choose an option: ", 1, IMPORT_CATALOG);
+            Integer choice = readNumber("Choose an option: ", 1, VIEW_HISTORY);
             if (choice == null || choice == EXIT) 
             {
                 running = false;
@@ -67,6 +68,11 @@ public class ClubShelfController
         if (choice == IMPORT_CATALOG)
         {
             return handleImport();
+        }
+        if (choice == VIEW_HISTORY)
+        {
+            showLoanHistory();
+            return true;
         }
         int[] selection = readSelection(choice != VIEW_CATALOG);
         if (selection == null) 
@@ -98,6 +104,57 @@ public class ClubShelfController
         {
             view.showMessage(e.getMessage());
             return true;
+        }
+    }
+
+
+    /**
+     * Shows every loan, oldest first, then the loans that are overdue
+     * today so club officers know whom to follow up with.
+     */
+    private void showLoanHistory()
+    {
+        LoanRecord[] history = model.getLoanHistory();
+        if (history.length == 0)
+        {
+            view.showMessage("No loans yet.");
+            return;
+        }
+        view.showMessage("Loan history (due " + LoanRecord.LOAN_DAYS
+            + " days after borrowing):");
+        for (LoanRecord loan : history)
+        {
+            String status;
+            if (!loan.isReturned())
+            {
+                status = "still out, due " + loan.getDueDate();
+            }
+            else if (loan.wasReturnedLate())
+            {
+                status = "returned LATE on " + loan.getReturnedOn();
+            }
+            else
+            {
+                status = "returned on " + loan.getReturnedOn();
+            }
+            view.showMessage("  " + loan.getStudentId() + "  "
+                + loan.getItemName() + " (" + loan.getClubName()
+                + ")  borrowed " + loan.getBorrowedOn() + ", " + status);
+        }
+        LoanRecord[] overdue = model.getOverdueLoans();
+        if (overdue.length == 0)
+        {
+            view.showMessage("No overdue loans.");
+        }
+        else
+        {
+            view.showMessage("OVERDUE - follow up with:");
+            for (LoanRecord loan : overdue)
+            {
+                view.showMessage("  " + loan.getStudentId() + "  "
+                    + loan.getItemName() + " (" + loan.getClubName()
+                    + "), due " + loan.getDueDate());
+            }
         }
     }
 

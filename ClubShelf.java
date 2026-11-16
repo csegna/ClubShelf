@@ -1,12 +1,17 @@
 import java.io.IOException;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
 /**
  * Holds clubs and handles borrowing, waitlists, and returns.
  * Menu numbers start at 1. Invalid numbers throw IllegalArgumentException.
  * Other rejected requests return an ActionResult and leave the items as they were.
+ * Every loan (including automatic hand-offs from the waitlist) is recorded in
+ * a loan history so the people running the clubs can follow up on late returns.
  *
  * @author Corbin Segna
- * @version 2026.11.09
+ * @version 2026.11.16
  */
 public class ClubShelf 
 {
@@ -17,12 +22,35 @@ public class ClubShelf
     public static final int ID_LENGTH = 9;
 
     private Club[] clubs;
+    private Clock clock;
+    private ArrayList<LoanRecord> loans;
 
     /** 
-     * Sets up three clubs with three available items each. 
+     * Sets up three clubs with three available items each, using today's
+     * date from the system clock for loan records.
      **/
     public ClubShelf() 
     {
+        this(Clock.systemDefaultZone());
+    }
+
+
+    /**
+     * Sets up the same three clubs, using the given clock for loan dates.
+     * Tests pass a clock they control so they can check late returns
+     * without waiting real days.
+     *
+     * @param clock the clock used to date loans
+     * @throws IllegalArgumentException if clock is null
+     */
+    public ClubShelf(Clock clock) 
+    {
+        if (clock == null)
+        {
+            throw new IllegalArgumentException("Clock cannot be null");
+        }
+        this.clock = clock;
+        this.loans = new ArrayList<LoanRecord>();
         clubs = new Club[] 
             {
             new Club("Photography Club", new Equipment[] 
@@ -151,7 +179,8 @@ public class ClubShelf
         int itemNumber,
         String studentId) 
     {
-        Equipment item = getEquipment(clubNumber, itemNumber);
+        Club club = getClub(clubNumber);
+        Equipment item = club.getItem(itemNumber);
         if (!isValidId(studentId)) {
             return result(Outcome.INVALID_STUDENT_ID);
         }
@@ -164,6 +193,7 @@ public class ClubShelf
             return result(Outcome.ITEM_UNAVAILABLE);
         }
         item.setBorrowerId(studentId);
+        openLoan(club, item, studentId);
         return result(Outcome.SUCCESS);
     }
 
@@ -220,7 +250,8 @@ public class ClubShelf
         int itemNumber,
         String studentId) 
     {
-        Equipment item = getEquipment(clubNumber, itemNumber);
+        Club club = getClub(clubNumber);
+        Equipment item = club.getItem(itemNumber);
         if (!isValidId(studentId)) 
         {
             return result(Outcome.INVALID_STUDENT_ID);
@@ -240,7 +271,78 @@ public class ClubShelf
             next = waitlist.dequeue();
         }
         item.setBorrowerId(next); 
+        closeLoan(club, item, studentId);
+        if (next != null)
+        {
+            openLoan(club, item, next);
+        }
         return new ActionResult(Outcome.SUCCESS, 0, next);
+    }
+
+
+    /**
+     * @return every loan, oldest first, including ones still out. The
+     *         records are immutable, so changing this array does not change
+     *         the history.
+     */
+    public LoanRecord[] getLoanHistory()
+    {
+        return loans.toArray(new LoanRecord[loans.size()]);
+    }
+
+
+    /**
+     * @return loans that are still out and past their due date as of today,
+     *         oldest first
+     */
+    public LoanRecord[] getOverdueLoans()
+    {
+        LocalDate today = today();
+        ArrayList<LoanRecord> overdue = new ArrayList<LoanRecord>();
+        for (LoanRecord loan : loans)
+        {
+            if (loan.isOverdue(today))
+            {
+                overdue.add(loan);
+            }
+        }
+        return overdue.toArray(new LoanRecord[overdue.size()]);
+    }
+
+
+    /** Starts a loan record dated today. */
+    private void openLoan(Club club, Equipment item, String studentId)
+    {
+        loans.add(new LoanRecord(studentId, club.getName(), item.getName(),
+            today()));
+    }
+
+
+    /**
+     * Closes the most recent open loan for this student and item. Searches
+     * from the newest record because the open loan is always the latest one
+     * for that item.
+     */
+    private void closeLoan(Club club, Equipment item, String studentId)
+    {
+        for (int i = loans.size() - 1; i >= 0; i--)
+        {
+            LoanRecord loan = loans.get(i);
+            if (!loan.isReturned()
+                && loan.getStudentId().equals(studentId)
+                && loan.getClubName().equals(club.getName())
+                && loan.getItemName().equals(item.getName()))
+            {
+                loans.set(i, loan.returnedOn(today()));
+                return;
+            }
+        }
+    }
+
+
+    private LocalDate today()
+    {
+        return LocalDate.now(clock);
     }
 
     

@@ -102,7 +102,7 @@ public class ConsoleViewTest {
 
     // showMenu
 
-    /** The menu lists all seven choices in order. */
+    /** The menu lists all eight choices in order. */
     @Test
     public void testShowMenu() {
         view.showMenu();
@@ -110,7 +110,8 @@ public class ConsoleViewTest {
             "  1. View a catalog", "  2. Borrow an item",
             "  3. Join a waitlist", "  4. Return an item",
             "  5. View a waitlist", "  6. Quit",
-            "  7. Import club catalog" }, printedLines());
+            "  7. Import club catalog", "  8. View loan history" },
+            printedLines());
     }
 
 
