@@ -1,3 +1,4 @@
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +25,8 @@ public class LinkedQueueTest
         assertTrue(queue.isEmpty());
         assertEquals(0, queue.size());
         assertEquals(0, queue.toArray().length);
+        assertFalse(queue.contains("missing"));
+        assertFalse(queue.contains(null));
     }
 
 
@@ -52,6 +55,24 @@ public class LinkedQueueTest
         assertEquals("first", queue.peek());
         assertEquals(2, queue.size());
         assertEquals("first", queue.dequeue());
+    }
+
+
+    @Test
+    public void testOrderAfterInterleavedOperations()
+    {
+        queue.enqueue("A");
+        queue.enqueue("B");
+        assertEquals("A", queue.dequeue());
+        queue.enqueue("C");
+
+        assertEquals(2, queue.size());
+        assertEquals("B", queue.peek());
+        assertArrayEquals(new Object[] { "B", "C" }, queue.toArray());
+        assertEquals("B", queue.dequeue());
+        assertEquals("C", queue.dequeue());
+        assertTrue(queue.isEmpty());
+        assertEquals(0, queue.size());
     }
 
 
