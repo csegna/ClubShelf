@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 
 /**
  * Runs the menu, checks menu choices, and shows results from ClubShelf.
@@ -123,13 +124,20 @@ public class ClubShelfController
             view.showMessage("Import complete. Added " + addedClubs
                 + " club(s) and " + addedItems + " equipment item(s).");
         }
+        catch (NoSuchFileException e)
+        {
+            view.showMessage("Could not find catalog file: " + fileName
+                + ". Nothing was imported.");
+        }
         catch (IOException e)
         {
-            view.showMessage("Could not read catalog: " + e.getMessage());
+            view.showMessage("Could not read catalog file: " + fileName
+                + ". Nothing was imported.");
         }
         catch (IllegalArgumentException e)
         {
-            view.showMessage("Import failed: " + e.getMessage());
+            view.showMessage("Import failed: " + e.getMessage()
+                + ". Nothing was imported.");
         }
         return true;
     }
